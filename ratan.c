@@ -12,12 +12,16 @@
 
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define mapMaxSizeY 30
 #define mapMaxSizeX 30
 
-#define MAX_ENEMIES 10
+#define MAX_ENEMIES 100
 #define MAX_MAPS 10
+
+#define maxButtonSizeX 20
+#define maxButtonSizeY 20
 
 // enums
 typedef enum State { MENU , GAME , SETT, CLASSPICK }state;
@@ -28,6 +32,12 @@ typedef struct Vector2 {
     int y;
     int x;
 } Vec2;
+
+typedef struct {
+  int *array;
+  size_t used;
+  size_t size
+}Array;
 
 typedef struct Tile {
     Vec2 pos;
@@ -47,7 +57,7 @@ typedef struct Enemy {
 
 typedef struct Map {
     int id;
-    int map[mapMaxSizeY][mapMaxSizeX];
+    Array *map;
 } map;
 
 typedef struct Button {
@@ -135,6 +145,11 @@ static bool CoreInit();
 
 static bool MapInit();
 
+
+// array tools
+static void initArray(Array *a, size_t Size);
+static void insertArray(Array *a, int element);
+
 // gui
 
 static button CreateButton(const char text);
@@ -171,10 +186,43 @@ const char *ascii_art =
     "                                           ((________________\n"
     "                                           `----\"\"\"\"~~~~^^^```\n";
 
+// for the dynamic GUI
+void initArray(Array *a, size_t Size) {
+  a->array = malloc(Size * sizeof(int));
+  a->used = 0;
+  a->size = Size;
+}
+
+void insertArray(Array *a, int element) {
+  if (a->used == a->size) {
+    a->size *= 2;
+    a->array = realloc(a->array, a->size * sizeof(int));
+  }
+  a->array[a->used++] = element;
+}
+
 button CreateButton(char txt)
 {
+  Array a;
+  int size;
   button btn = { 0 };
   btn.text = txt;
+  int lenght = strlen(btn.text);
+  size = lenght+2;
+
+  if(size == 0|| lenght == maxButtonSizeX)
+  {
+    return (button){0};
+  }
+
+  initArray(&a, lenght);
+
+  // resize the array for the button
+  for (int i = 0; i < size; i++)
+  {
+    insertArray(&a, i);
+  }
+
   return btn;
 }
 
@@ -435,6 +483,7 @@ void UpdateEnemies()
 {
   for (int i = 0; i < enemy_count; i++)
   {
+    // random movement 
     int direction = rand() % 4;
     switch (direction)
       {
