@@ -14,6 +14,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <core.h>
+
 #define mapMaxSizeY 30
 #define mapMaxSizeX 30
 
@@ -27,7 +29,6 @@
 typedef enum State { MENU , GAME , SETT, CLASSPICK }state;
 typedef enum Class { ROGUE , KNIGHT, MAGE }class;
 
-// structs
 typedef struct Vector2 {
     int y;
     int x;
@@ -36,8 +37,14 @@ typedef struct Vector2 {
 typedef struct {
   int *array;
   size_t used;
-  size_t size
+  size_t size;
 }Array;
+
+typedef struct {
+  char *array;
+  size_t used;
+  size_t size;
+}CharArray;
 
 typedef struct Tile {
     Vec2 pos;
@@ -62,7 +69,8 @@ typedef struct Map {
 
 typedef struct Button {
   char text;
-  char btn[3][9];
+  Vec2 pos;
+  CharArray button;
   bool selected;
 }button;
 
@@ -145,14 +153,9 @@ static bool CoreInit();
 
 static bool MapInit();
 
-
-// array tools
-static void initArray(Array *a, size_t Size);
-static void insertArray(Array *a, int element);
-
 // gui
 
-static button CreateButton(const char text);
+static void CreateButton(button *btn, Vec2 pos, const char *text);
 static void DrawButton(button btn, Vec2 pos);
 
 // tools
@@ -201,47 +204,83 @@ void insertArray(Array *a, int element) {
   a->array[a->used++] = element;
 }
 
+void initCharArray(CharArray *a, size_t size)
+{
+  a->array = (char *)malloc(size * sizeof(char));
+  a->used = 0;
+  a->size = size;
+}
+
+void appendToCharArray(CharArray *array, char c)
+{
+  if (array->used == array->size) {
+    array->size *= 2;
+    array->array = realloc(array->array, array->size * sizeof(char));
+  }
+  array->array[array->used++] = c;
+}
+
+void freeCharArray(CharArray *array)
+{
+  free(array->array);
+}
+
+
+void CreateButton(button *btn, Vec2 pos, const char *text)
+{
+  btn->pos.y = pos.y;
+  btn->pos.x = pos.x;
+  btn->selected = false;
+  initCharArray(&btn->button, strlen(text));
+
+  for (size_t i = 0; text[i] != '/0'; i++){
+    appendToCharArray(&btn->button, text[i]);
+  }
+}
+
+void freeButton(button *btn)
+{
+  freeCharArray(&btn->button);
+}
+
+/*
 button CreateButton(char txt)
 {
   Array a;
-  int size;
+  int sizeY;
+  int sizeX;
+
   button btn = { 0 };
   btn.text = txt;
-  int lenght = strlen(btn.text);
-  size = lenght+2;
 
-  if(size == 0|| lenght == maxButtonSizeX)
+  int Barlenght = strlen(&btn.text);
+  
+
+  // entire bar size
+  size = Barlenght+2;
+
+  if(size == 0|| Barlenght == maxButtonSizeX)
   {
     return (button){0};
   }
 
-  initArray(&a, lenght);
+  initArray(&a, Barlenght);
 
-  // resize the array for the button
+
   for (int i = 0; i < size; i++)
   {
-    insertArray(&a, i);
+    for (int x = ;x < size)
+    if (i == 0 || i == size-1) a.array[0] = '#';
+    
+    
+    
+    a.array[Barlenght] = btn.text;
   }
 
   return btn;
 }
+*/
 
-void DrawButton(button btn, Vec2 pos)
-{
-  
-  for (int y = 0; y < 3; y++)
-  {
-    for (int x = 0; x < 9; x++)
-    {
-
-
-      if(btn.selected)
-      {
-
-      }
-    }
-  }
-}
 
 void DrawClassPickBorder()
 {
@@ -526,7 +565,7 @@ bool MapInit()
         for (int x = 0; x < mapMaxSizeX; x++)
         {
             if (y == 0 || y == mapMaxSizeY - 1 || x == 0 || x == mapMaxSizeX - 1)
-                mp.map[y][x] = 1; // Boundary wall
+                mp.map[y][x] = '#'; // Boundary wall
             else
                 mp.map[y][x] = 0; // Empty space
         }
