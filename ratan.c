@@ -14,8 +14,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <core.h>
-
 #define mapMaxSizeY 30
 #define mapMaxSizeX 30
 
@@ -39,6 +37,13 @@ typedef struct {
   size_t used;
   size_t size;
 }Array;
+
+typedef struct 
+{
+  int **array;
+  size_t used;
+  size_t size;
+}d_array;
 
 typedef struct {
   char *array;
@@ -64,7 +69,7 @@ typedef struct Enemy {
 
 typedef struct Map {
     int id;
-    Array *map;
+    d_array map;
 } map;
 
 typedef struct Button {
@@ -225,7 +230,7 @@ void freeCharArray(CharArray *array)
   free(array->array);
 }
 
-
+/*
 void CreateButton(button *btn, Vec2 pos, const char *text)
 {
   btn->pos.y = pos.y;
@@ -233,10 +238,11 @@ void CreateButton(button *btn, Vec2 pos, const char *text)
   btn->selected = false;
   initCharArray(&btn->button, strlen(text));
 
-  for (size_t i = 0; text[i] != '/0'; i++){
+  for (size_t i = 0; text[i] != "\0"; i++){
     appendToCharArray(&btn->button, text[i]);
   }
 }
+*/
 
 void freeButton(button *btn)
 {
@@ -354,7 +360,7 @@ void ClassPickInputs(int input, int *selected)
 
 int GetTile(map mp ,Vec2 pos)
 {
-  return mp.map[pos.y][pos.x];
+  return mp.map.array[pos.y][pos.x];
 }
 
 void DrawMenuBorder() {
@@ -565,9 +571,9 @@ bool MapInit()
         for (int x = 0; x < mapMaxSizeX; x++)
         {
             if (y == 0 || y == mapMaxSizeY - 1 || x == 0 || x == mapMaxSizeX - 1)
-                mp.map[y][x] = '#'; // Boundary wall
+                mp.map.array[y][x] = '#'; // Boundary wall
             else
-                mp.map[y][x] = 0; // Empty space
+                mp.map.array[y][x] = 0; // Empty space
         }
     }
     return true;
@@ -582,7 +588,7 @@ void GameLoop()
     {
         for (int x = 0; x < mapMaxSizeX; x++)
         {
-            if (mp.map[y][x] == 1)
+            if (mp.map.array[y][x] == 1)
                 mvprintw(y, x, "#");
         }
     }

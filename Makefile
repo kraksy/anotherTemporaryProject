@@ -1,26 +1,41 @@
-CC = gcc
-CFLAGS = -Wall -Wextra -g
-LDFLAGS = -lncurses -lcjson
+# Compiler and flags
+CC := gcc
+CFLAGS := -Iinclude -Wall -Wextra -g
+LDFLAGS := -lncurses -ljson-c
 
-SRC_DIR = src
-OBJ_DIR = obj
-BIN_DIR = bin
+# Directories
+SRC_DIR := src
+BUILD_DIR := build
+INCLUDE_DIR := include
 
-SRC = $(SRC_DIR)/main.c $(SRC_DIR)/core.c $(SRC_DIR)/menu.c $(SRC_DIR)/classpick.c $(SRC_DIR)/settings.c $(SRC_DIR)/enemy.c $(SRC_DIR)/map.c $(SRC_DIR)/ascii_art.c
-OBJ = $(SRC:.c=.o)
+# Target binary
+TARGET := $(BUILD_DIR)/game
 
-TARGET = $(BIN_DIR)/game
+# Source files and object files
+SRC := $(wildcard $(SRC_DIR)/*.c)
+OBJ := $(patsubst $(SRC_DIR)/%.c, $(BUILD_DIR)/%.o, $(SRC))
 
+# Default target
 all: $(TARGET)
 
+# Linking the binary
 $(TARGET): $(OBJ)
-	$(CC) $(OBJ) -o $(TARGET) $(LDFLAGS)
+	@mkdir -p $(BUILD_DIR)
+	$(CC) $(OBJ) -o $@ $(LDFLAGS)
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+# Compiling object files
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
+	@mkdir -p $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
+# Clean up build directory
 clean:
-	rm -f $(OBJ_DIR)/*.o $(TARGET)
+	rm -rf $(BUILD_DIR)
 
+# Run the program
 run: $(TARGET)
 	./$(TARGET)
+
+# Phony targets
+.PHONY: all clean run
+
